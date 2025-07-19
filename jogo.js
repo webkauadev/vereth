@@ -55,6 +55,15 @@ const jogador = {
   frases: [],
   salasDescobertas: [],
   diarioTentativas: {},
+  perguntasBloqueadas: [],
+};
+
+const perguntasDialogo = {
+  origem: 'O que eu sou, de verdade?',
+  cura: 'Existe uma cura para os infectados?',
+  criador: 'Por que o Arquivista me criou?',
+  sentido: 'Qual o proposito de tudo isso?',
+  fim: 'Vereth pode ser salva?'
 };
 
 function rolarComAtributo(attr){
@@ -133,6 +142,14 @@ function perderItemAleatorio(){
 }
 
 function perderPergunta(){
+  const disponiveis = Object.keys(perguntasDialogo)
+    .filter(k => !jogador.perguntasBloqueadas.includes(k));
+  if(disponiveis.length===0){
+    console.log('Sua mente ja nao comporta mais esquecimentos.');
+    return;
+  }
+  const k = disponiveis[Math.floor(Math.random()*disponiveis.length)];
+  jogador.perguntasBloqueadas.push(k);
   console.log('Uma pergunta ao Anciao se perde na sua mente...');
 }
 
@@ -230,17 +247,21 @@ function construirAtributos(){
 
 function dialogoFinal(){
   console.log('\nTodas as memorias emergem. O Anciao se manifesta.');
-  const perguntas = [
-    'Por que o Arquivista criou o Vazio?',
-    'O que era a infeccao?',
-    'O que eu sou, de verdade?',
-    'A vela era sua?',
-    'O Arquivista te odiava?'
-  ];
-  perguntas.forEach((p,i)=> console.log(`${i+1}. ${p}`));
+  const disponiveis = Object.entries(perguntasDialogo)
+    .filter(([k]) => !jogador.perguntasBloqueadas.includes(k));
+  if(disponiveis.length === 0){
+    console.log('Voce nao tem perguntas a fazer.');
+    console.log('Fim do Ato I.');
+    process.exit(0);
+  }
+  disponiveis.forEach(([_, texto], i)=> console.log(`${i+1}. ${texto}`));
   let escolha;
-  do{ escolha = parseInt(prompt('Escolha uma pergunta: '),10); }while(isNaN(escolha) || escolha<1 || escolha>5);
+  do {
+    escolha = parseInt(prompt('Escolha uma pergunta: '),10);
+  } while (isNaN(escolha) || escolha < 1 || escolha > disponiveis.length);
   console.log('A resposta ecoa na sua mente...');
+  console.log('Fim do Ato I.');
+  process.exit(0);
 }
 
 main();
