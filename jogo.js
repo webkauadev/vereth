@@ -58,6 +58,7 @@ const jogador = {
   perguntasBloqueadas: [],
   salasVasculhadas: [],
   reflexoTentado: false,
+  combateClareiraConcluido: false,
 };
 
 const perguntasDialogo = {
@@ -124,6 +125,11 @@ function entrarSala(nome){
   }
   jogador.salaAtual = nome;
   console.log(sala.descricao());
+  if(nome === 'Clareira da Lembranca' && !jogador.combateClareiraConcluido){
+    iniciarCombate('Muwon');
+    jogador.combateClareiraConcluido = true;
+    console.log('A carta de Muwon fala de saudade e dor.');
+  }
   mostrarComandos(sala);
 }
 
@@ -227,10 +233,10 @@ const salas = {
         }
         jogador.reflexoTentado = true;
         const r = Math.floor(Math.random()*1000)+1;
-        if(r>10){
+        if(r === 777){
           console.log('O reflexo sorri, com olhos que voce conhece.');
           console.log('"Sou Quirrel. Voce se esqueceu de mim... mas eu nunca esqueci de voce."');
-          jogador.frases.push('No reflexo, vi a ausencia que carrego. E percebi que nunca estive sozinho.');
+          jogador.frases.push('Quirrel. Esse nome nao era meu, mas ainda assim me pertence.');
         }else{
           console.log('O reflexo se move, mas sua boca nao abre.');
           console.log('Quando o som enfim vem, e apenas uma palavra: "Vazio."');
