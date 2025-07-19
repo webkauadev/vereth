@@ -1,261 +1,370 @@
-const jogador = {
-  nome: "Vazio", 
-  atributos: {
-    vontade: 2,
-    foco: 2,
-    coragem: 2,
-    vínculo: 2,
-    astúcia: 2
+const prompt = require('prompt-sync')({sigint: true});
+
+const perguntas = [
+  {
+    texto: 'Quando o silencio dura tempo demais... o que voce ouve primeiro?',
+    opcoes: {
+      a: {resposta: 'Um eco de algo que nunca vivi.', efeito: () => atributos.memoria += 2},
+      b: {resposta: 'O som da minha propria respiracao.', efeito: () => atributos.vontade += 2},
+      c: {resposta: 'Nada. E isso me acalma.', efeito: () => atributos.coragem += 2}
+    }
   },
+  {
+    texto: 'Por que voce quer entender?',
+    opcoes: {
+      a: {resposta: 'Para nao ser enganado de novo.', efeito: () => atributos.foco += 2},
+      b: {resposta: 'Porque alguma coisa aqui precisa ser lembrada.', efeito: () => { atributos.memoria += 1; atributos.vontade += 1;}},
+      c: {resposta: 'Porque entender me faz sentir menos so.', efeito: () => atributos.vinculo += 2}
+    }
+  },
+  {
+    texto: 'Voce se lembra de ter sentido medo pela primeira vez?',
+    opcoes: {
+      a: {resposta: 'Nao. E isso me assusta.', efeito: () => atributos.vontade += 2},
+      b: {resposta: 'Sim. E continuo carregando.', efeito: () => atributos.coragem += 2},
+      c: {resposta: 'Sim. Mas ja nao doi.', efeito: () => { atributos.vontade += 1; atributos.memoria += 1; }}
+    }
+  },
+  {
+    texto: 'Qual dessas palavras te parece mais verdadeira agora?',
+    opcoes: {
+      a: {resposta: 'Espera.', efeito: () => atributos.foco += 2},
+      b: {resposta: 'Ruina.', efeito: () => atributos.memoria += 2},
+      c: {resposta: 'Nome.', efeito: () => atributos.vinculo += 2}
+    }
+  },
+  {
+    texto: 'E se, ao final, ninguem lembrar de voce?',
+    opcoes: {
+      a: {resposta: 'Que assim seja.', efeito: () => atributos.vontade += 2},
+      b: {resposta: 'Eu lembraria de mim.', efeito: () => atributos.foco += 2},
+      c: {resposta: 'Alguem, em algum lugar, vai sentir a falta.', efeito: () => { atributos.vinculo += 1; atributos.coragem += 1; }}
+    }
+  }
+];
+
+let atributos = { memoria:0, vontade:0, coragem:0, foco:0, vinculo:0 };
+
+function getAtributoAnciao(){
+  return Math.floor((atributos.memoria + atributos.vontade + atributos.vinculo)/3);
+}
+
+const jogador = {
+  nome: 'Vazio',
   inventario: [],
-  frasesDesbloqueadas: [], 
-  flags: {
-    runa_memorizada: false,
-    vela_viva: false,
-    pedra_espelhada: false,
-    portal_aberto: false,
-    diario_ativado: false,
-    frasesTentadas: {}
-  }
+  frases: [],
+  salasDescobertas: [],
+  diarioTentativas: {},
+  perguntasBloqueadas: [],
+  salasVasculhadas: [],
+  reflexoTentado: false,
+  combateClareiraConcluido: false,
 };
 
-function rolarComAtributo(atributo) {
-  const base = Math.floor(Math.random() * 5) + 1; // dado de 1 a 5
-  const modificador = jogador.atributos[atributo] || 0;
-  const total = base + modificador;
-
-  if (total >= 6) {
-    console.log("🟢 Sucesso.");
-    return true;
-  } else {
-    console.log("🔴 Falha.");
-    return false;
-  }
+const perguntasDialogo = {
+  origem: 'O que eu sou, de verdade?',
+  cura: 'Existe uma cura para os infectados?',
+  criador: 'Por que o Arquivista me criou?',
+  sentido: 'Qual o proposito de tudo isso?',
+  fim: 'Vereth pode ser salva?'
 };
 
-function adicionarItem(nomeDoItem) {
-  if (!jogador.inventario.includes(nomeDoItem)) {
-    jogador.inventario.push(nomeDoItem);
-    console.log(`Você obteve: ${nomeDoItem}`);
-  }
+let diarioAtivo = null;
+
+function rolarComAtributo(attr){
+  const base = Math.floor(Math.random()*5)+1;
+  const total = base + atributos[attr];
+  return total >= 6;
 }
 
-function removerItem(nomeDoItem) {
-  const index = jogador.inventario.indexOf(nomeDoItem);
-  if (index !== -1) {
-    jogador.inventario.splice(index, 1);
-    console.log(`Você perdeu: ${nomeDoItem}`);
-  }
-}
-
-function listarInventario() {
-  if (jogador.inventario.length === 0) {
-    console.log("Seu inventário está vazio.");
-  } else {
-    console.log("Inventário:", jogador.inventario.join(", "));
-  }
-}
-
-function marcarFlag(flag) {
-  jogador.flags[flag] = true;
-}
-
-function verificarFlag(flag) {
-  return jogador.flags[flag] === true;
-}
-
-function tentarFraseDiario(idSala, atributo, frase) {
-  if (jogador.flags.frasesTentadas[idSala]) {
-    console.log("Você já tentou lembrar algo aqui. Não consegue mais.");
+function tentarFraseDiario(id, attr, texto){
+  if(jogador.diarioTentativas[id]){
+    console.log('Voce ja tentou lembrar algo aqui.');
     return;
   }
-
-  jogador.flags.frasesTentadas[idSala] = true;
-
-  const sucesso = rolarComAtributo(atributo);
-  if (sucesso) {
-    jogador.frasesDesbloqueadas.push(frase);
-    console.log("🖋️ Seus dedos começam a escrever no diário...");
-    console.log(`📖 “${frase}”`);
+  jogador.diarioTentativas[id] = true;
+  if(rolarComAtributo(attr)){
+    jogador.frases.push(texto);
+    console.log('Seus dedos se movem sozinhos...');
+    console.log(`"${texto}"`);
   } else {
-    console.log("Você fecha o diário... nada veio à tona.");
+    console.log('O diario permanece mudo.');
   }
 }
 
-function iniciarCombate(nomeInimigo) {
-  console.log(`Você está diante de ${nomeInimigo}. A infecção brilha nos olhos dele.`);
+function abrirDiario(id, attr, texto){
+  if(jogador.diarioTentativas[id]){
+    console.log('Voce ja buscou memoria neste lugar.');
+    return;
+  }
+  diarioAtivo = {id, attr, texto};
+  console.log('Voce empunha o velho diario. As paginas rangem como se o tempo ainda vivesse entre elas...');
+  console.log('Talvez seja hora de REFLETIR, LEMBRAR ou PENSAR.');
+  mostrarComandos(salas[jogador.salaAtual]);
+}
 
-  const escolha = prompt("Você LUTAR ou POUPAR?\n> ").toUpperCase();
+function refletir(){
+  if(!diarioAtivo){
+    console.log('Voce precisa abrir o diario primeiro.');
+    return;
+  }
+  const {id, attr, texto} = diarioAtivo;
+  diarioAtivo = null;
+  tentarFraseDiario(id, attr, texto);
+}
 
-  if (escolha === "LUTAR") {
-    return lutarInfectado();
-  } else if (escolha === "POUPAR" || escolha === "FUGIR") {
-    return rolarDadoPiedade();
-  } else {
-    console.log("Escolha inválida. Você hesita e o inimigo ataca!");
-    return lutarInfectado();
+function entrarSala(nome){
+  const sala = salas[nome];
+  if(!sala){
+    console.log('Voce se perde na escuridao.');
+    return;
+  }
+  if(!jogador.salasDescobertas.includes(nome)){
+    jogador.salasDescobertas.push(nome);
+    console.log(`[Nova sala descoberta: ${nome}]`);
+  }
+  jogador.salaAtual = nome;
+  console.log(sala.descricao());
+  if(nome === 'Clareira da Lembranca' && !jogador.combateClareiraConcluido){
+    iniciarCombate('Muwon');
+    jogador.combateClareiraConcluido = true;
+    console.log('A carta de Muwon fala de saudade e dor.');
+  }
+  mostrarComandos(sala);
+}
+
+function mostrarComandos(sala){
+  console.log('Comandos disponiveis:');
+  for(const cmd of Object.keys(sala.acoes)){
+    console.log(' - '+cmd);
+  }
+  if(sala.itens && !jogador.salasVasculhadas.includes(jogador.salaAtual)){
+    console.log(' - vasculhar');
+  }
+  if(diarioAtivo){
+    console.log(' - refletir (ou lembrar, pensar)');
   }
 }
 
-function lutarInfectado() {
-  console.log("Você ergue sua arma com hesitação...");
-
-  const sucesso = rolarComAtributo("coragem");
-
-  if (sucesso) {
-    console.log("Você desfere o golpe final. O corpo cai sem resistência. Está feito.");
-    return "vitoria";
-  } else {
-    console.log("Você hesita. O inimigo atinge você. Você sobrevive, mas algo dentro de você quebra.");
-    return perderAtributoAleatorio();
+function iniciarCombate(inimigo){
+  console.log(`Um ${inimigo} surge, infectado.`);
+  const acao = prompt('LUTAR ou POUPAR? ').trim().toUpperCase();
+  if(acao==='LUTAR'){
+    if(rolarComAtributo('coragem')){
+      console.log('Voce vence a luta.');
+    }else{
+      console.log('Voce falha e sente sua forca diminuir.');
+      perderAtributoAleatorio();
+    }
+  }else{
+    rolarDadoPiedade();
   }
 }
 
-function rolarDadoPiedade() {
-  console.log("Você opta por não matar. Mas a infecção observa...");
+function perderAtributoAleatorio(){
+  const keys = Object.keys(atributos);
+  const k = keys[Math.floor(Math.random()*keys.length)];
+  if(atributos[k]>0) atributos[k]-=1;
+  console.log(`Perdeu 1 ponto em ${k}.`);
+}
 
-  const resultado = Math.random();
+function perderItemAleatorio(){
+  if(jogador.inventario.length===0){
+    console.log('Nada a perder.');
+    return;
+  }
+  const i = Math.floor(Math.random()*jogador.inventario.length);
+  const item = jogador.inventario.splice(i,1)[0];
+  console.log(`O item ${item} escapa de suas maos.`);
+}
 
-  if (resultado < 0.5) {
-    console.log("Nada acontece. Apenas o silêncio de uma escolha difícil.");
-    return "nada";
-  } else if (resultado < 0.75) {
-    return perderAtributoAleatorio();
-  } else if (resultado < 0.875) {
-    return perderItemAleatorio();
-  } else {
-    return perderPerguntaAnciao();
+function perderPergunta(){
+  const disponiveis = Object.keys(perguntasDialogo)
+    .filter(k => !jogador.perguntasBloqueadas.includes(k));
+  if(disponiveis.length===0){
+    console.log('Sua mente ja nao comporta mais esquecimentos.');
+    return;
+  }
+  const k = disponiveis[Math.floor(Math.random()*disponiveis.length)];
+  jogador.perguntasBloqueadas.push(k);
+  console.log('Uma pergunta ao Anciao se perde na sua mente...');
+}
+
+function rolarDadoPiedade(){
+  const r = Math.random();
+  if(r<0.5){
+    console.log('Nada acontece.');
+  }else if(r<0.75){
+    perderAtributoAleatorio();
+  }else if(r<0.875){
+    perderItemAleatorio();
+  }else{
+    perderPergunta();
   }
 }
 
-function rolarDadoPiedade() {
-  console.log("Você opta por não matar. Mas a infecção observa...");
-
-  const resultado = Math.random();
-
-  if (resultado < 0.5) {
-    console.log("Nada acontece. Apenas o silêncio de uma escolha difícil.");
-    return "nada";
-  } else if (resultado < 0.75) {
-    return perderAtributoAleatorio();
-  } else if (resultado < 0.875) {
-    return perderItemAleatorio();
-  } else {
-    return perderPerguntaAnciao();
+function vasculharSala(){
+  const sala = salas[jogador.salaAtual];
+  if(!sala.itens || sala.itens.length===0 || jogador.salasVasculhadas.includes(jogador.salaAtual)){
+    console.log('Nada mais pode ser encontrado aqui.');
+    return;
   }
-}
-
-function perderAtributoAleatorio() {
-  const chaves = Object.keys(jogador.atributos);
-  const sorteado = chaves[Math.floor(Math.random() * chaves.length)];
-
-  if (jogador.atributos[sorteado] > 0) {
-    jogador.atributos[sorteado] -= 1;
-    console.log(`Você sente algo se esvair. (-1 em ${sorteado.toUpperCase()})`);
-  } else {
-    console.log("Mesmo com nada a perder, você sente o vazio aumentar.");
-  }
-
-  return "atributo";
-}
-
-function perderItemAleatorio() {
-  if (jogador.inventario.length === 0) {
-    console.log("Você não possui nada que possa ser tirado...");
-    return "nada";
-  }
-
-  const index = Math.floor(Math.random() * jogador.inventario.length);
-  const item = jogador.inventario.splice(index, 1)[0];
-
-  console.log(`Algo escapa de seu bolso... Você perdeu: ${item}.`);
-  // Aqui você pode salvar para possível recuperação no Ato II
-  return "item";
-}
-
-function perderPerguntaAnciao() {
-  if (!jogador.flags.perguntasBloqueadas) {
-    jogador.flags.perguntasBloqueadas = [];
-  }
-
-  const todas = ["origem", "cura", "criador", "sentido", "fim"];
-  const restantes = todas.filter(p => !jogador.flags.perguntasBloqueadas.includes(p));
-  
-  if (restantes.length === 0) {
-    console.log("Nada foi retirado... o silêncio permanece.");
-    return "nada";
-  }
-
-  const bloqueada = restantes[Math.floor(Math.random() * restantes.length)];
-  jogador.flags.perguntasBloqueadas.push(bloqueada);
-
-  console.log(`Uma dúvida profunda se perde no tempo... (${bloqueada.toUpperCase()} não poderá ser perguntada ao Ancião)`);
-  return "pergunta";
-}
-
-function mostrarPerguntasDisponiveis() {
-  const todas = {
-    origem: "Quem sou eu de verdade?",
-    cura: "Existe uma cura para os infectados?",
-    criador: "Por que o Arquivista me criou?",
-    sentido: "Qual o propósito de tudo isso?",
-    fim: "Vereth pode ser salva?"
-  };
-
-  const bloqueadas = jogador.flags.perguntasBloqueadas || [];
-  const disponiveis = Object.keys(todas).filter(p => !bloqueadas.includes(p));
-
-  console.log("Você pode fazer uma pergunta ao Ancião:");
-  disponiveis.forEach((chave, i) => {
-    console.log(`${i + 1}. ${todas[chave]}`);
+  jogador.salasVasculhadas.push(jogador.salaAtual);
+  sala.itens.forEach(item => {
+    console.log(`Voce encontra: ${item}.`);
+    console.log('Voce guarda o item no seu manto.');
+    jogador.inventario.push(item);
   });
 }
 
-jogador.salasDescobertas = []; // Ex: ["Floresta Inquieta", "Cabana Esquecida"]
-jogador.diarioTentativas = {}; 
-// Ex: { "Cabana Esquecida": true, "Clareira": false }
-
-function entrarSala(nomeSala) {
-  const novaSala = salas[nomeSala];
-
-  if (!novaSala) {
-    console.log("Você tenta seguir, mas se vê perdido.");
-    return;
+const salas = {
+  'Floresta Inquieta': {
+    descricao(){
+      return 'Arvores tortas cercam um lago de agua quase cristalina, que parece observar de volta.';
+    },
+    itens: ['anel partido'],
+    acoes: {
+      norte(){ entrarSala('Ruina do Sussurro'); },
+      observar(){ console.log('Voce sente o silencio ecoar.'); },
+      olhar(){
+        if(jogador.reflexoTentado){
+          console.log('O reflexo ja disse tudo o que podia. Agora, so o silencio permanece.');
+          return;
+        }
+        jogador.reflexoTentado = true;
+        const r = Math.floor(Math.random()*1000)+1;
+        if(r === 777){
+          console.log('O reflexo sorri, com olhos que voce conhece.');
+          console.log('"Sou Quirrel. Voce se esqueceu de mim... mas eu nunca esqueci de voce."');
+          jogador.frases.push('Quirrel. Esse nome nao era meu, mas ainda assim me pertence.');
+        }else{
+          console.log('O reflexo se move, mas sua boca nao abre.');
+          console.log('Quando o som enfim vem, e apenas uma palavra: "Vazio."');
+        }
+      },
+      diario(){ abrirDiario('floresta','vontade','Antes do fim, tentei ensinar ao vazio o nome da esperança. Mas como se ensina luz a quem nunca abriu os olhos?'); }
+    }
+  },
+  'Ruina do Sussurro': {
+    descricao(){ return 'Pedras caidas contam historias esquecidas.'; },
+    itens: ['eco cristalizado'],
+    acoes:{
+      sul(){ entrarSala('Floresta Inquieta'); },
+      leste(){ entrarSala('Cabana Esquecida'); },
+      esperar(){ console.log('O vento traz sussurros ancestrais.'); },
+      diario(){ abrirDiario('ruina','foco','Sussurros de um selo são mais fortes que gritos de um rei. Por isso escolhi o silêncio como última muralha.'); }
+    }
+  },
+  'Cabana Esquecida': {
+    descricao(){ return 'Restos de madeira e cinzas escondem memórias.'; },
+    itens: ['fragmento de vela'],
+    acoes:{
+      oeste(){ entrarSala('Ruina do Sussurro'); },
+      tocar(){ console.log('A madeira, fria, lembra antigas presenças.'); },
+      diario(){ abrirDiario('cabana','vinculo','Esculpi para lembrar. Cada forma, uma ausência que não me deixava em paz.'); }
+    }
+  },
+  'Clareira da Lembranca': {
+    descricao(){ return 'Uma clareira iluminada por uma luz triste.'; },
+    acoes:{
+      oeste(){ entrarSala('Cabana Esquecida'); },
+      leste(){ entrarSala('Portal Quebrado'); },
+      ler(){ console.log('A carta de Muwon fala de saudade e dor.'); },
+      diario(){ abrirDiario('clareira','coragem','Nem todo grito de socorro é audível. Às vezes, ele se esconde na decisão de ficar… e apodrecer.'); }
+    }
+  },
+  'Portal Quebrado': {
+    descricao(){ return 'Arcos despedaçados guardam um portal adormecido.'; },
+    acoes:{
+      inspecionar(){ console.log('Runas apagadas sugerem um poder antigo.'); },
+      tentar(){
+        const requisitados = ['fragmento de vela','anel partido','eco cristalizado'];
+        const faltam = requisitados.filter(i => !jogador.inventario.includes(i));
+        if(faltam.length===0){
+          console.log('O portal pulsa com vida antiga. Uma nova etapa começa...');
+          console.log('Fim do Ato I.');
+          process.exit(0);
+        } else {
+          console.log('O portal recusa sua presença. Algo ainda está faltando...');
+        }
+      },
+      voltar(){ entrarSala('Clareira da Lembranca'); }
+    }
   }
+};
 
-  // Primeira vez?
-  if (!jogador.salasDescobertas.includes(nomeSala)) {
-    jogador.salasDescobertas.push(nomeSala);
-    console.log(`[Nova sala descoberta: ${nomeSala.toUpperCase()}]`);
+function main(){
+  console.log('--- VARETH: O SELO ---');
+  construirAtributos();
+  console.log('\nSuas escolhas estao marcadas.');
+  entrarSala('Floresta Inquieta');
+  while(true){
+    const comando = prompt('> ').trim().toLowerCase();
+    if(comando === 'sair'){
+      console.log('A escuridao te engole.');
+      break;
+    }
+    const sala = salas[jogador.salaAtual];
+    if(sala.acoes[comando]){
+      sala.acoes[comando]();
+    }else if(comando === 'encarar' && sala.acoes['olhar']){
+       sala.acoes['olhar']();
+    }else if(comando === 'vasculhar'){
+      vasculharSala();
+    }else if(['refletir','lembrar','pensar'].includes(comando)){
+       refletir();
+    }else if(comando === 'inventario'){
+      console.log('Inventario:', jogador.inventario.join(', ') || 'vazio');
+    }else if(comando === 'status'){
+      console.log('Atributos:', atributos, '| ANCIAO:', getAtributoAnciao());
+    }else if(comando === 'memorias'){
+       if(jogador.frases.length===0){
+         console.log('Nenhuma memoria registrada.');
+       }else{
+         console.log('MEMORIAS REGISTRADAS:');
+         jogador.frases.forEach(f=>console.log('- "'+f+'"'));
+       }
+    }else{
+      console.log('Acao desconhecida.');
+    }
+    if(jogador.frases.length === 4){
+      dialogoFinal();
+      break;
+    }
   }
-
-  // Atualiza a sala atual
-  jogador.salaAtual = nomeSala;
-
-  // Mostra descrição
-  console.log(novaSala.descricao());
-
-  // Mostra ações
-  console.log("Você pode:", Object.keys(novaSala.acoes).join(", "));
 }
 
-function tentarFraseDiario() {
-  const sala = jogador.salaAtual;
-
-  if (jogador.diarioTentativas[sala]) {
-    console.log("Você já tentou refletir aqui. O momento passou.");
-    return;
-  }
-
-  jogador.diarioTentativas[sala] = true;
-
-  if (Math.random() < 0.4) {
-    const frase = desbloquearFrase(sala);
-    console.log("Você abre o diário... seus dedos escrevem por conta própria:");
-    console.log(`❝ ${frase} ❞`);
-  } else {
-    console.log("Você folheia o diário... mas nada vem à mente.");
-  }
+function construirAtributos(){
+  perguntas.forEach((p,idx)=>{
+    console.log(`\n${idx+1}. ${p.texto}`);
+    for(const [letra,op] of Object.entries(p.opcoes)){
+      console.log(` ${letra}) ${op.resposta}`);
+    }
+    let r;
+    do{ r = prompt('> ').trim().toLowerCase(); }while(!p.opcoes[r]);
+    p.opcoes[r].efeito();
+  });
+  console.log('\n"Esta feito. Essas sao as fissuras por onde o mundo te atravessa."');
 }
 
+function dialogoFinal(){
+  console.log('\nTodas as memorias emergem. O Anciao se manifesta.');
+  const disponiveis = Object.entries(perguntasDialogo)
+    .filter(([k]) => !jogador.perguntasBloqueadas.includes(k));
+  if(disponiveis.length === 0){
+    console.log('Voce nao tem perguntas a fazer.');
+    console.log('Fim do Ato I.');
+    process.exit(0);
+  }
+  disponiveis.forEach(([_, texto], i)=> console.log(`${i+1}. ${texto}`));
+  let escolha;
+  do {
+    escolha = parseInt(prompt('Escolha uma pergunta: '),10);
+  } while (isNaN(escolha) || escolha < 1 || escolha > disponiveis.length);
+  console.log('A resposta ecoa na sua mente...');
+  console.log('Fim do Ato I.');
+  process.exit(0);
+}
+
+main();
 
