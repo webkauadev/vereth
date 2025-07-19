@@ -19,6 +19,7 @@ Aventura narrativa em texto para rodar no terminal usando Node.js.
 - **Exploração**: salas descritas de forma poética, cada uma com ações próprias.
 - **Diário**: em algumas salas é possível desbloquear fragmentos ao testar um atributo.
 - **Memórias**: use `diario` e depois `refletir` (ou `lembrar`, `pensar`) para tentar descobrir novas frases. O comando `memorias` exibe as já desbloqueadas.
+- **Reflexo no lago**: na Floresta Inquieta, use `olhar` (ou `encarar`) para encontrar Quirrel ou o Vazio e talvez registrar uma memória.
 - **Combate e Piedade**: encontros com inimigos exigem coragem ou permitem poupar, gerando consequências aleatórias.
 - **Itens**: algumas salas escondem objetos coletáveis usando o comando `vasculhar`.
 - **Portal Quebrado**: exige três itens para ativar o caminho ao Ato II.

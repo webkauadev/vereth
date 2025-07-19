@@ -57,6 +57,7 @@ const jogador = {
   diarioTentativas: {},
   perguntasBloqueadas: [],
   salasVasculhadas: [],
+  reflexoTentado: false,
 };
 
 const perguntasDialogo = {
@@ -213,12 +214,28 @@ function vasculharSala(){
 const salas = {
   'Floresta Inquieta': {
     descricao(){
-      return 'Arvores tortas cercam um lago silencioso.';
+      return 'Arvores tortas cercam um lago de agua quase cristalina, que parece observar de volta.';
     },
     itens: ['anel partido'],
     acoes: {
       norte(){ entrarSala('Ruina do Sussurro'); },
       observar(){ console.log('Voce sente o silencio ecoar.'); },
+      olhar(){
+        if(jogador.reflexoTentado){
+          console.log('O reflexo ja disse tudo o que podia. Agora, so o silencio permanece.');
+          return;
+        }
+        jogador.reflexoTentado = true;
+        const r = Math.floor(Math.random()*1000)+1;
+        if(r>10){
+          console.log('O reflexo sorri, com olhos que voce conhece.');
+          console.log('"Sou Quirrel. Voce se esqueceu de mim... mas eu nunca esqueci de voce."');
+          jogador.frases.push('No reflexo, vi a ausencia que carrego. E percebi que nunca estive sozinho.');
+        }else{
+          console.log('O reflexo se move, mas sua boca nao abre.');
+          console.log('Quando o som enfim vem, e apenas uma palavra: "Vazio."');
+        }
+      },
       diario(){ abrirDiario('floresta','vontade','Antes do fim, tentei ensinar ao vazio o nome da esperança. Mas como se ensina luz a quem nunca abriu os olhos?'); }
     }
   },
@@ -284,6 +301,8 @@ function main(){
     const sala = salas[jogador.salaAtual];
     if(sala.acoes[comando]){
       sala.acoes[comando]();
+    }else if(comando === 'encarar' && sala.acoes['olhar']){
+       sala.acoes['olhar']();
     }else if(comando === 'vasculhar'){
       vasculharSala();
     }else if(['refletir','lembrar','pensar'].includes(comando)){
