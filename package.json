@@ -1,4 +1,11 @@
 {
+  "name": "vareth-o-selo",
+  "version": "0.1.0",
+  "description": "Aventura narrativa em texto",
+  "main": "jogo.js",
+  "scripts": {
+    "start": "node jogo.js"
+  },
   "dependencies": {
     "prompt-sync": "^4.2.0"
   }

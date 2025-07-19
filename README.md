@@ -1,0 +1,24 @@
+# Vareth: O Selo
+
+Aventura narrativa em texto para rodar no terminal usando Node.js.
+
+## Como jogar
+
+1. Instale as dependências:
+   ```bash
+   npm install
+   ```
+2. Inicie o jogo:
+   ```bash
+   npm start
+   ```
+
+## Sistemas principais
+
+- **Ritual do Reflexo**: cinco perguntas moldam os atributos do herói.
+- **Exploração**: salas descritas de forma poética, cada uma com ações próprias.
+- **Diário**: em algumas salas é possível desbloquear fragmentos ao testar um atributo.
+- **Combate e Piedade**: encontros com inimigos exigem coragem ou permitem poupar, gerando consequências aleatórias.
+- **Diálogo final**: ao coletar todos os fragmentos do diário, uma pergunta pode ser feita ao Ancião.
+
+Este projeto está em desenvolvimento e serve como demonstração de um jogo em linha de comando.
