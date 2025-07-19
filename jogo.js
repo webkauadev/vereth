@@ -45,6 +45,10 @@ const perguntas = [
 
 let atributos = { memoria:0, vontade:0, coragem:0, foco:0, vinculo:0 };
 
+function getAtributoAnciao(){
+  return Math.floor((atributos.memoria + atributos.vontade + atributos.vinculo)/3);
+}
+
 const jogador = {
   nome: 'Vazio',
   inventario: [],
@@ -200,7 +204,7 @@ function main(){
     }else if(comando === 'inventario'){
       console.log('Inventario:', jogador.inventario.join(', ') || 'vazio');
     }else if(comando === 'status'){
-      console.log('Atributos:', atributos);
+      console.log('Atributos:', atributos, '| ANCIAO:', getAtributoAnciao());
     }else{
       console.log('Acao desconhecida.');
     }
