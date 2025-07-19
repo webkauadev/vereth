@@ -189,7 +189,7 @@ const salas = {
     descricao(){
       return 'Arvores tortas cercam um lago silencioso.';
     },
-    itens: ['tronco seco'],
+    itens: ['anel partido'],
     acoes: {
       norte(){ entrarSala('Ruina do Sussurro'); },
       observar(){ console.log('Voce sente o silencio ecoar.'); },
@@ -198,7 +198,7 @@ const salas = {
   },
   'Ruina do Sussurro': {
     descricao(){ return 'Pedras caidas contam historias esquecidas.'; },
-    itens: ['pergaminho molhado'],
+    itens: ['eco cristalizado'],
     acoes:{
       sul(){ entrarSala('Floresta Inquieta'); },
       leste(){ entrarSala('Cabana Esquecida'); },
@@ -208,7 +208,7 @@ const salas = {
   },
   'Cabana Esquecida': {
     descricao(){ return 'Restos de madeira e cinzas escondem memórias.'; },
-    itens: ['vela partida'],
+    itens: ['fragmento de vela'],
     acoes:{
       oeste(){ entrarSala('Ruina do Sussurro'); },
       tocar(){ console.log('A madeira, fria, lembra antigas presenças.'); },
@@ -219,8 +219,27 @@ const salas = {
     descricao(){ return 'Uma clareira iluminada por uma luz triste.'; },
     acoes:{
       oeste(){ entrarSala('Cabana Esquecida'); },
+      leste(){ entrarSala('Portal Quebrado'); },
       ler(){ console.log('A carta de Muwon fala de saudade e dor.'); },
       diario(){ tentarFraseDiario('clareira','coragem','Nem todo grito de socorro é audível. Às vezes, ele se esconde na decisão de ficar… e apodrecer.'); }
+    }
+  },
+  'Portal Quebrado': {
+    descricao(){ return 'Arcos despedaçados guardam um portal adormecido.'; },
+    acoes:{
+      inspecionar(){ console.log('Runas apagadas sugerem um poder antigo.'); },
+      tentar(){
+        const requisitados = ['fragmento de vela','anel partido','eco cristalizado'];
+        const faltam = requisitados.filter(i => !jogador.inventario.includes(i));
+        if(faltam.length===0){
+          console.log('O portal pulsa com vida antiga. Uma nova etapa começa...');
+          console.log('Fim do Ato I.');
+          process.exit(0);
+        } else {
+          console.log('O portal recusa sua presença. Algo ainda está faltando...');
+        }
+      },
+      voltar(){ entrarSala('Clareira da Lembranca'); }
     }
   }
 };

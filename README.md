@@ -20,6 +20,7 @@ Aventura narrativa em texto para rodar no terminal usando Node.js.
 - **Diário**: em algumas salas é possível desbloquear fragmentos ao testar um atributo.
 - **Combate e Piedade**: encontros com inimigos exigem coragem ou permitem poupar, gerando consequências aleatórias.
 - **Itens**: algumas salas escondem objetos coletáveis usando o comando `vasculhar`.
+- **Portal Quebrado**: exige três itens para ativar o caminho ao Ato II.
 - **Diálogo final**: ao coletar todos os fragmentos do diário, escolha uma pergunta ao Ancião (perguntas perdidas não aparecem na lista).
 - **Ancião**: atributo calculado automaticamente a partir de memória, vontade e vínculo.
 
