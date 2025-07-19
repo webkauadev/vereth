@@ -67,6 +67,8 @@ const perguntasDialogo = {
   fim: 'Vereth pode ser salva?'
 };
 
+let diarioAtivo = null;
+
 function rolarComAtributo(attr){
   const base = Math.floor(Math.random()*5)+1;
   const total = base + atributos[attr];
@@ -86,6 +88,27 @@ function tentarFraseDiario(id, attr, texto){
   } else {
     console.log('O diario permanece mudo.');
   }
+}
+
+function abrirDiario(id, attr, texto){
+  if(jogador.diarioTentativas[id]){
+    console.log('Voce ja buscou memoria neste lugar.');
+    return;
+  }
+  diarioAtivo = {id, attr, texto};
+  console.log('Voce empunha o velho diario. As paginas rangem como se o tempo ainda vivesse entre elas...');
+  console.log('Talvez seja hora de REFLETIR, LEMBRAR ou PENSAR.');
+  mostrarComandos(salas[jogador.salaAtual]);
+}
+
+function refletir(){
+  if(!diarioAtivo){
+    console.log('Voce precisa abrir o diario primeiro.');
+    return;
+  }
+  const {id, attr, texto} = diarioAtivo;
+  diarioAtivo = null;
+  tentarFraseDiario(id, attr, texto);
 }
 
 function entrarSala(nome){
@@ -110,6 +133,9 @@ function mostrarComandos(sala){
   }
   if(sala.itens && !jogador.salasVasculhadas.includes(jogador.salaAtual)){
     console.log(' - vasculhar');
+  }
+  if(diarioAtivo){
+    console.log(' - refletir (ou lembrar, pensar)');
   }
 }
 
@@ -193,7 +219,7 @@ const salas = {
     acoes: {
       norte(){ entrarSala('Ruina do Sussurro'); },
       observar(){ console.log('Voce sente o silencio ecoar.'); },
-      diario(){ tentarFraseDiario('floresta','vontade','Antes do fim, tentei ensinar ao vazio o nome da esperança. Mas como se ensina luz a quem nunca abriu os olhos?'); }
+      diario(){ abrirDiario('floresta','vontade','Antes do fim, tentei ensinar ao vazio o nome da esperança. Mas como se ensina luz a quem nunca abriu os olhos?'); }
     }
   },
   'Ruina do Sussurro': {
@@ -203,7 +229,7 @@ const salas = {
       sul(){ entrarSala('Floresta Inquieta'); },
       leste(){ entrarSala('Cabana Esquecida'); },
       esperar(){ console.log('O vento traz sussurros ancestrais.'); },
-      diario(){ tentarFraseDiario('ruina','foco','Sussurros de um selo são mais fortes que gritos de um rei. Por isso escolhi o silêncio como última muralha.'); }
+      diario(){ abrirDiario('ruina','foco','Sussurros de um selo são mais fortes que gritos de um rei. Por isso escolhi o silêncio como última muralha.'); }
     }
   },
   'Cabana Esquecida': {
@@ -212,7 +238,7 @@ const salas = {
     acoes:{
       oeste(){ entrarSala('Ruina do Sussurro'); },
       tocar(){ console.log('A madeira, fria, lembra antigas presenças.'); },
-      diario(){ tentarFraseDiario('cabana','vinculo','Esculpi para lembrar. Cada forma, uma ausência que não me deixava em paz.'); }
+      diario(){ abrirDiario('cabana','vinculo','Esculpi para lembrar. Cada forma, uma ausência que não me deixava em paz.'); }
     }
   },
   'Clareira da Lembranca': {
@@ -221,7 +247,7 @@ const salas = {
       oeste(){ entrarSala('Cabana Esquecida'); },
       leste(){ entrarSala('Portal Quebrado'); },
       ler(){ console.log('A carta de Muwon fala de saudade e dor.'); },
-      diario(){ tentarFraseDiario('clareira','coragem','Nem todo grito de socorro é audível. Às vezes, ele se esconde na decisão de ficar… e apodrecer.'); }
+      diario(){ abrirDiario('clareira','coragem','Nem todo grito de socorro é audível. Às vezes, ele se esconde na decisão de ficar… e apodrecer.'); }
     }
   },
   'Portal Quebrado': {
@@ -260,10 +286,19 @@ function main(){
       sala.acoes[comando]();
     }else if(comando === 'vasculhar'){
       vasculharSala();
+    }else if(['refletir','lembrar','pensar'].includes(comando)){
+       refletir();
     }else if(comando === 'inventario'){
       console.log('Inventario:', jogador.inventario.join(', ') || 'vazio');
     }else if(comando === 'status'){
       console.log('Atributos:', atributos, '| ANCIAO:', getAtributoAnciao());
+    }else if(comando === 'memorias'){
+       if(jogador.frases.length===0){
+         console.log('Nenhuma memoria registrada.');
+       }else{
+         console.log('MEMORIAS REGISTRADAS:');
+         jogador.frases.forEach(f=>console.log('- "'+f+'"'));
+       }
     }else{
       console.log('Acao desconhecida.');
     }

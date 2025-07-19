@@ -18,6 +18,7 @@ Aventura narrativa em texto para rodar no terminal usando Node.js.
 - **Ritual do Reflexo**: cinco perguntas moldam os atributos do herói.
 - **Exploração**: salas descritas de forma poética, cada uma com ações próprias.
 - **Diário**: em algumas salas é possível desbloquear fragmentos ao testar um atributo.
+- **Memórias**: use `diario` e depois `refletir` (ou `lembrar`, `pensar`) para tentar descobrir novas frases. O comando `memorias` exibe as já desbloqueadas.
 - **Combate e Piedade**: encontros com inimigos exigem coragem ou permitem poupar, gerando consequências aleatórias.
 - **Itens**: algumas salas escondem objetos coletáveis usando o comando `vasculhar`.
 - **Portal Quebrado**: exige três itens para ativar o caminho ao Ato II.
