@@ -56,6 +56,7 @@ const jogador = {
   salasDescobertas: [],
   diarioTentativas: {},
   perguntasBloqueadas: [],
+  salasVasculhadas: [],
 };
 
 const perguntasDialogo = {
@@ -106,6 +107,9 @@ function mostrarComandos(sala){
   console.log('Comandos disponiveis:');
   for(const cmd of Object.keys(sala.acoes)){
     console.log(' - '+cmd);
+  }
+  if(sala.itens && !jogador.salasVasculhadas.includes(jogador.salaAtual)){
+    console.log(' - vasculhar');
   }
 }
 
@@ -166,11 +170,26 @@ function rolarDadoPiedade(){
   }
 }
 
+function vasculharSala(){
+  const sala = salas[jogador.salaAtual];
+  if(!sala.itens || sala.itens.length===0 || jogador.salasVasculhadas.includes(jogador.salaAtual)){
+    console.log('Nada mais pode ser encontrado aqui.');
+    return;
+  }
+  jogador.salasVasculhadas.push(jogador.salaAtual);
+  sala.itens.forEach(item => {
+    console.log(`Voce encontra: ${item}.`);
+    console.log('Voce guarda o item no seu manto.');
+    jogador.inventario.push(item);
+  });
+}
+
 const salas = {
   'Floresta Inquieta': {
     descricao(){
       return 'Arvores tortas cercam um lago silencioso.';
     },
+    itens: ['tronco seco'],
     acoes: {
       norte(){ entrarSala('Ruina do Sussurro'); },
       observar(){ console.log('Voce sente o silencio ecoar.'); },
@@ -179,6 +198,7 @@ const salas = {
   },
   'Ruina do Sussurro': {
     descricao(){ return 'Pedras caidas contam historias esquecidas.'; },
+    itens: ['pergaminho molhado'],
     acoes:{
       sul(){ entrarSala('Floresta Inquieta'); },
       leste(){ entrarSala('Cabana Esquecida'); },
@@ -188,6 +208,7 @@ const salas = {
   },
   'Cabana Esquecida': {
     descricao(){ return 'Restos de madeira e cinzas escondem memórias.'; },
+    itens: ['vela partida'],
     acoes:{
       oeste(){ entrarSala('Ruina do Sussurro'); },
       tocar(){ console.log('A madeira, fria, lembra antigas presenças.'); },
@@ -218,6 +239,8 @@ function main(){
     const sala = salas[jogador.salaAtual];
     if(sala.acoes[comando]){
       sala.acoes[comando]();
+    }else if(comando === 'vasculhar'){
+      vasculharSala();
     }else if(comando === 'inventario'){
       console.log('Inventario:', jogador.inventario.join(', ') || 'vazio');
     }else if(comando === 'status'){
